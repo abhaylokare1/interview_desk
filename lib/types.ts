@@ -1,0 +1,9 @@
+export const STATUSES = ["Scheduled", "Completed", "Cancelled", "Selected", "Rejected"] as const;
+export const EXPERIENCE_TYPES = ["Original", "Newgen's", "Original + Newgen's"] as const;
+export const INTERVIEW_TYPES = ["ChatGPT", "Proxy"] as const;
+export type Role = "admin" | "student";
+export type Status = (typeof STATUSES)[number];
+export type User = { id: number; name: string; email: string; contactNumber: string | null; role: Role; createdAt?: string };
+export type Session = { role: Role; userId?: number; name: string };
+export type Interview = { id: number; userId: number | null; studentName: string; yearsOfExperience: string | null; experienceType: string; interviewDate: string; fromTime: string; toTime: string; technology: string | null; companyName: string | null; interviewType: string; contactNumber: string | null; interviewRound: string | null; status: Status; };
+export type InterviewInput = Omit<Interview, "id" | "userId">;
