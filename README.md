@@ -1,6 +1,6 @@
 # ScheduleDesk
 
-ScheduleDesk is a simple personal interview scheduler built with Next.js, Tailwind CSS, Neon PostgreSQL, and ExcelJS. It is designed for Vercel's free plan and keeps all data in Neon, not in the deployment filesystem.
+ScheduleDesk is a responsive interview scheduler built with Next.js, Tailwind CSS, Neon PostgreSQL, and ExcelJS. It uses one Next.js project for the UI, server actions, API routes, authentication, and database access.
 
 ## Local setup
 
@@ -16,7 +16,7 @@ ScheduleDesk is a simple personal interview scheduler built with Next.js, Tailwi
    ```
 
 4. Create a Neon project at [neon.tech](https://neon.tech), copy its pooled connection string, and place it in `DATABASE_URL`.
-5. No separate migration command is needed: ScheduleDesk creates the `interviews` table on its first safe request.
+5. No separate migration command is needed: ScheduleDesk creates the `users` and `interviews` tables on its first safe request.
 6. Run `npm run dev`, then open `http://localhost:3000`.
 
 ## GitHub
@@ -41,8 +41,9 @@ git push -u origin main
 
 ## Features
 
-- One-admin secure, HTTP-only cookie login
-- Add, edit, delete, search, and status-filter interviews
+- Environment-controlled admin login plus student registration/login with PBKDF2 password hashes and HTTP-only sessions
+- Ownership checks keep students limited to their own interview records; admins can manage all records
+- Add, edit, delete, search, date-filter, and status-filter interviews
 - Overlapping-time warning (with a Save Anyway choice)
 - Today and upcoming schedule dashboard
 - On-demand `student_interviews.xlsx` export with formatted headers, filters, and frozen header row
