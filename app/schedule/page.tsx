@@ -1,0 +1,3 @@
+import Link from "next/link";
+import InterviewForm from "@/components/interview-form";
+export default function SchedulePage() { return <main className="mx-auto max-w-5xl px-4 py-6 sm:py-10"><div className="mb-6 flex items-center justify-between gap-4"><div><p className="mb-2 text-sm font-semibold text-violet-300">STUDENT SCHEDULING</p><h1 className="text-3xl font-bold tracking-tight text-white">Schedule Interview</h1><p className="mt-1 text-sm text-slate-400">Submit your interview details directly.</p></div><Link href="/" className="text-sm font-semibold text-violet-300">Back</Link></div><InterviewForm publicSchedule /></main>; }

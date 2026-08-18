@@ -1,6 +1,6 @@
-# ScheduleDesk
+# InterviewDesk
 
-ScheduleDesk is a responsive interview scheduler built with Next.js, Tailwind CSS, Neon PostgreSQL, and ExcelJS. It uses one Next.js project for the UI, server actions, API routes, authentication, and database access.
+InterviewDesk is a responsive interview scheduler built with Next.js, Tailwind CSS, Neon PostgreSQL, and ExcelJS. It uses one Next.js project for the UI, server actions, API routes, authentication, and database access.
 
 ## Local setup
 
@@ -16,7 +16,7 @@ ScheduleDesk is a responsive interview scheduler built with Next.js, Tailwind CS
    ```
 
 4. Create a Neon project at [neon.tech](https://neon.tech), copy its pooled connection string, and place it in `DATABASE_URL`.
-5. No separate migration command is needed: ScheduleDesk creates the `users` and `interviews` tables on its first safe request.
+5. No separate migration command is needed: InterviewDesk creates the `users` and `interviews` tables on its first safe request.
 6. Run `npm run dev`, then open `http://localhost:3000`.
 
 ## GitHub
@@ -24,9 +24,9 @@ ScheduleDesk is a responsive interview scheduler built with Next.js, Tailwind CS
 ```bash
 git init
 git add .
-git commit -m "Create ScheduleDesk"
+git commit -m "Create InterviewDesk"
 git branch -M main
-git remote add origin https://github.com/YOUR_NAME/scheduledesk.git
+git remote add origin https://github.com/YOUR_NAME/interviewdesk.git
 git push -u origin main
 ```
 
@@ -41,8 +41,8 @@ git push -u origin main
 
 ## Features
 
-- Environment-controlled admin login plus student registration/login with PBKDF2 password hashes and HTTP-only sessions
-- Ownership checks keep students limited to their own interview records; admins can manage all records
+- Public student scheduling form with no student account required
+- Environment-controlled, HTTP-only admin login for managing all interview records
 - Add, edit, delete, search, date-filter, and status-filter interviews
 - Overlapping-time warning (with a Save Anyway choice)
 - Today and upcoming schedule dashboard

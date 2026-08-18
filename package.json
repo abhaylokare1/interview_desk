@@ -1,5 +1,5 @@
 {
-  "name": "scheduledesk",
+  "name": "interviewdesk",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -25,5 +25,9 @@
     "eslint-config-next": "15.4.6",
     "tailwindcss": "^4.1.7",
     "typescript": "^5.8.3"
+  },
+  "allowScripts": {
+    "sharp@0.34.5": true,
+    "unrs-resolver@1.12.2": true
   }
 }
