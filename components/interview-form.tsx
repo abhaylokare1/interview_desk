@@ -1,8 +1,96 @@
 "use client";
+
 import { useState } from "react";
 import { checkConflict, persistInterview, scheduleInterview } from "@/app/actions";
 import { EXPERIENCE_TYPES, INTERVIEW_TYPES, STATUSES, type Interview } from "@/lib/types";
 import { useRouter } from "next/navigation";
+
 const field = "block text-sm font-medium text-slate-300";
-function Select({ label, name, values, value }: { label: string; name: string; values: readonly string[]; value: string }) { return <label className={field}>{label}<select className="mt-1.5" name={name} defaultValue={value}>{values.map(x => <option key={x}>{x}</option>)}</select></label>; }
-export default function InterviewForm({ interview, profile, publicSchedule = false }: { interview?: Interview; profile?: { name: string; contactNumber: string | null }; publicSchedule?: boolean }) { const router = useRouter(); const [message, setMessage] = useState(""); const [saving, setSaving] = useState(false); const v = (key: Exclude<keyof Interview, "id">): string => String(interview?.[key] ?? ""); async function submit(formData: FormData) { setSaving(true); setMessage(""); if (!publicSchedule) { const conflict = await checkConflict(formData); if (conflict.error) { setMessage(conflict.error); setSaving(false); return; } } const result = publicSchedule ? await scheduleInterview(formData) : await persistInterview(formData); setSaving(false); if (result.error) setMessage(result.error); else if (publicSchedule) { setMessage(result.success!); (document.querySelector("form") as HTMLFormElement | null)?.reset(); } else { router.push("/interviews"); router.refresh(); } } return <form action={submit} className="rounded-2xl border border-white/10 bg-[#111522]/85 p-4 shadow-2xl shadow-black/20 sm:p-6"><input type="hidden" name="id" value={interview?.id ?? ""} /><div className="mb-6 flex items-center gap-3 border-b border-white/8 pb-4"><span className="grid size-9 place-items-center rounded-xl bg-violet-500/15 text-violet-300">✦</span><div><h2 className="font-semibold text-white">Interview details</h2><p className="text-xs text-slate-500">Fields marked * are required</p></div></div><div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"><label className={field}>Student Name *<input className="mt-1.5" name="studentName" defaultValue={interview ? v("studentName") : profile?.name || ""} required autoFocus /></label><label className={field}>Years of Experience<input className="mt-1.5" name="yearsOfExperience" type="number" min="0" step="0.5" defaultValue={v("yearsOfExperience")} /></label><Select label="Experience Type" name="experienceType" values={EXPERIENCE_TYPES} value={v("experienceType") || "Original"}/><label className={field}>Interview Date *<input className="mt-1.5" name="interviewDate" type="date" defaultValue={v("interviewDate")} required /></label><label className={field}>From Time *<input className="mt-1.5" name="fromTime" type="time" defaultValue={v("fromTime")} required /></label><label className={field}>To Time *<input className="mt-1.5" name="toTime" type="time" defaultValue={v("toTime")} required /></label><label className={field}>Technology<input className="mt-1.5" name="technology" defaultValue={v("technology")} placeholder="Java + React" /></label><label className={field}>Company Name<input className="mt-1.5" name="companyName" defaultValue={v("companyName")} /></label><Select label="Interview Type" name="interviewType" values={INTERVIEW_TYPES} value={v("interviewType") || "ChatGPT"}/><label className={field}>Contact Number<input className="mt-1.5" name="contactNumber" defaultValue={interview ? v("contactNumber") : profile?.contactNumber || ""} /></label><label className={field}>Interview Round<input className="mt-1.5" name="interviewRound" defaultValue={v("interviewRound")} placeholder="L1" /></label><Select label="Status" name="status" values={STATUSES} value={v("status") || "Scheduled"}/></div>{message && <p className={`mt-4 rounded-lg border p-3 text-sm ${message.includes("successfully") ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300" : "border-red-500/30 bg-red-500/10 text-red-300"}`}>{message}</p>}<div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row"><button type="button" onClick={() => router.back()} className="rounded-xl border border-white/12 px-5 py-2.5 font-semibold text-slate-300 hover:bg-white/5">Cancel</button><button disabled={saving} className="rounded-xl bg-gradient-to-r from-violet-600 to-indigo-500 px-5 py-2.5 font-semibold text-white disabled:opacity-60">{saving ? "Saving…" : interview ? "Update Interview" : "Save Interview"}</button></div></form>; }
+
+function Select({ label, name, values, value }: { label: string; name: string; values: readonly string[]; value: string }) {
+  return <label className={field}>{label}<select className="mt-1.5" name={name} defaultValue={value}>{values.map(item => <option key={item}>{item}</option>)}</select></label>;
+}
+
+function formatDate(value: string) {
+  if (!value) return "—";
+  return new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(`${value}T00:00:00`));
+}
+
+function formatTime(value: string) {
+  if (!value) return "—";
+  const [hours, minutes] = value.split(":").map(Number);
+  const suffix = hours >= 12 ? "PM" : "AM";
+  return `${((hours + 11) % 12) + 1}:${String(minutes).padStart(2, "0")} ${suffix}`;
+}
+
+function whatsappMessage(formData: FormData) {
+  const value = (key: string) => String(formData.get(key) || "").trim() || "—";
+  return `New Interview Scheduled\n\nName - ${value("studentName")}\nDate - ${formatDate(value("interviewDate"))}\nTime - ${formatTime(value("fromTime"))} - ${formatTime(value("toTime"))}\nTechnology - ${value("technology")}\nCompany Name - ${value("companyName")}\nContact No - ${value("contactNumber")}`;
+}
+
+export default function InterviewForm({ interview, profile, publicSchedule = false }: { interview?: Interview; profile?: { name: string; contactNumber: string | null }; publicSchedule?: boolean }) {
+  const router = useRouter();
+  const [message, setMessage] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [whatsappUrl, setWhatsappUrl] = useState("");
+  const [whatsappText, setWhatsappText] = useState("");
+  const v = (key: Exclude<keyof Interview, "id">): string => String(interview?.[key] ?? "");
+
+  async function submit(formData: FormData) {
+    setSaving(true);
+    setMessage("");
+    setWhatsappUrl("");
+    setWhatsappText("");
+    try {
+      if (!publicSchedule) {
+        const conflict = await checkConflict(formData);
+        if (conflict.error) { setMessage(conflict.error); return; }
+      }
+      const result = publicSchedule ? await scheduleInterview(formData) : await persistInterview(formData);
+      if (result.error) { setMessage(result.error); return; }
+      if (publicSchedule) {
+        const text = whatsappMessage(formData);
+        setWhatsappText(text);
+        setWhatsappUrl(`https://wa.me/?text=${encodeURIComponent(text)}`);
+        setMessage("Interview scheduled successfully. Use the button below to open WhatsApp.");
+        return;
+      }
+      router.push("/interviews");
+      router.refresh();
+    } catch {
+      setMessage("Unable to save the interview. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function copyWhatsAppMessage() {
+    try {
+      await navigator.clipboard.writeText(whatsappText);
+      setMessage("Interview scheduled successfully. Message copied—choose a WhatsApp group and paste it.");
+    } catch {
+      setMessage("Interview scheduled successfully. WhatsApp will open with the message pre-filled.");
+    }
+  }
+
+  return <form action={submit} className="rounded-2xl border border-white/10 bg-[#111522]/85 p-4 shadow-2xl shadow-black/20 sm:p-6">
+    <input type="hidden" name="id" value={interview?.id ?? ""} />
+    <div className="mb-6 flex items-center gap-3 border-b border-white/8 pb-4"><span className="grid size-9 place-items-center rounded-xl bg-violet-500/15 text-violet-300">✦</span><div><h2 className="font-semibold text-white">Interview details</h2><p className="text-xs text-slate-500">Fields marked * are required</p></div></div>
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <label className={field}>Student Name *<input className="mt-1.5" name="studentName" defaultValue={interview ? v("studentName") : profile?.name || ""} required autoFocus /></label>
+      <label className={field}>Years of Experience<input className="mt-1.5" name="yearsOfExperience" type="number" min="0" step="0.5" defaultValue={v("yearsOfExperience")} /></label>
+      <Select label="Experience Type" name="experienceType" values={EXPERIENCE_TYPES} value={v("experienceType") || "Original"} />
+      <label className={field}>Interview Date *<input className="mt-1.5" name="interviewDate" type="date" defaultValue={v("interviewDate")} required /></label>
+      <label className={field}>From Time *<input className="mt-1.5" name="fromTime" type="time" defaultValue={v("fromTime")} required /></label>
+      <label className={field}>To Time *<input className="mt-1.5" name="toTime" type="time" defaultValue={v("toTime")} required /></label>
+      <label className={field}>Technology<input className="mt-1.5" name="technology" defaultValue={v("technology")} placeholder="Java + React" /></label>
+      <label className={field}>Company Name<input className="mt-1.5" name="companyName" defaultValue={v("companyName")} /></label>
+      <Select label="Interview Type" name="interviewType" values={INTERVIEW_TYPES} value={v("interviewType") || "ChatGPT"} />
+      <label className={field}>Contact Number<input className="mt-1.5" name="contactNumber" defaultValue={interview ? v("contactNumber") : profile?.contactNumber || ""} /></label>
+      <label className={field}>Interview Round<input className="mt-1.5" name="interviewRound" defaultValue={v("interviewRound")} placeholder="L1" /></label>
+      <Select label="Status" name="status" values={STATUSES} value={v("status") || "Scheduled"} />
+    </div>
+    {message && <p className={`mt-4 rounded-lg border p-3 text-sm ${message.includes("successfully") ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300" : "border-red-500/30 bg-red-500/10 text-red-300"}`}>{message}</p>}
+    <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row"><button type="button" onClick={() => router.back()} className="rounded-xl border border-white/12 px-5 py-2.5 font-semibold text-slate-300 hover:bg-white/5">Cancel</button>{whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" onClick={() => { void copyWhatsAppMessage(); }} className="rounded-xl bg-[#25D366] px-5 py-2.5 text-center font-semibold text-slate-950 hover:bg-[#4be083]">Send to WhatsApp Group</a>}<button disabled={saving || !!whatsappUrl} className="rounded-xl bg-gradient-to-r from-violet-600 to-indigo-500 px-5 py-2.5 font-semibold text-white disabled:opacity-60">{saving ? "Saving…" : publicSchedule ? "Schedule Interview" : interview ? "Update Interview" : "Save Interview"}</button></div>
+  </form>;
+}
