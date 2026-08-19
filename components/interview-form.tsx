@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { type FormEvent, useRef, useState } from "react";
 import { checkConflict, persistInterview, scheduleInterview } from "@/app/actions";
 import { EXPERIENCE_TYPES, INTERVIEW_TYPES, STATUSES, type Interview } from "@/lib/types";
 import { useRouter } from "next/navigation";
@@ -40,16 +40,19 @@ export default function InterviewForm({ interview, profile, publicSchedule = fal
   const v = (key: Exclude<keyof Interview, "id">): string => String(interview?.[key] ?? "");
   const inputClass = (name: string) => `mt-1.5 ${emptyFields.includes(name) ? "border-red-500 ring-2 ring-red-500/25" : ""}`;
 
-  async function submit(formData: FormData) {
+  function validateRequiredFields(event: FormEvent<HTMLFormElement>) {
     const missing = Array.from(formRef.current?.querySelectorAll<HTMLInputElement>("input[required]") || []).filter(input => !input.value.trim()).map(input => input.name);
     if (missing.length) {
+      event.preventDefault();
       setEmptyFields(missing);
       setMessage("Complete the highlighted required fields.");
       const first = formRef.current?.querySelector<HTMLInputElement>(`[name="${missing[0]}"]`);
       first?.scrollIntoView({ behavior: "smooth", block: "center" });
       first?.focus();
-      return;
     }
+  }
+
+  async function submit(formData: FormData) {
     setSaving(true);
     setMessage("");
     setWhatsappUrl("");
@@ -102,7 +105,7 @@ export default function InterviewForm({ interview, profile, publicSchedule = fal
     if (!desktop) window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   }
 
-  return <form ref={formRef} noValidate action={submit} onInput={event => { const target = event.target as HTMLInputElement; if (target.name && target.value.trim()) setEmptyFields(previous => previous.filter(name => name !== target.name)); }} className="rounded-2xl border border-white/10 bg-[#111522]/85 p-4 shadow-2xl shadow-black/20 sm:p-6">
+  return <form ref={formRef} noValidate action={submit} onSubmit={validateRequiredFields} onInput={event => { const target = event.target as HTMLInputElement; if (target.name && target.value.trim()) setEmptyFields(previous => previous.filter(name => name !== target.name)); }} className="rounded-2xl border border-white/10 bg-[#111522]/85 p-4 shadow-2xl shadow-black/20 sm:p-6">
     <input type="hidden" name="id" value={interview?.id ?? ""} />
     <div className="mb-6 flex items-center gap-3 border-b border-white/8 pb-4"><span className="grid size-9 place-items-center rounded-xl bg-violet-500/15 text-violet-300">✦</span><div><h2 className="font-semibold text-white">Interview details</h2><p className="text-xs text-slate-500">Fields marked * are required</p></div></div>
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
