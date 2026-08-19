@@ -36,6 +36,7 @@ export default function InterviewForm({ interview, profile, publicSchedule = fal
   const [whatsappText, setWhatsappText] = useState("");
   const [copyNotice, setCopyNotice] = useState("");
   const [emptyFields, setEmptyFields] = useState<string[]>([]);
+  const [conflictDate, setConflictDate] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
   const v = (key: Exclude<keyof Interview, "id">): string => String(interview?.[key] ?? "");
   const inputClass = (name: string) => `mt-1.5 ${emptyFields.includes(name) ? "border-red-500 ring-2 ring-red-500/25" : ""}`;
@@ -57,13 +58,18 @@ export default function InterviewForm({ interview, profile, publicSchedule = fal
     setMessage("");
     setWhatsappUrl("");
     setWhatsappText("");
+    setConflictDate("");
     try {
       if (!publicSchedule) {
         const conflict = await checkConflict(formData);
         if (conflict.error) { setMessage(conflict.error); return; }
       }
       const result = publicSchedule ? await scheduleInterview(formData) : await persistInterview(formData);
-      if (result.error) { setMessage(result.error); return; }
+      if (result.error) {
+        setMessage(result.error);
+        if ("conflict" in result && result.conflict) setConflictDate(String(formData.get("interviewDate") || ""));
+        return;
+      }
       if (publicSchedule) {
         const text = whatsappMessage(formData);
         setWhatsappText(text);
@@ -123,6 +129,7 @@ export default function InterviewForm({ interview, profile, publicSchedule = fal
       <Select label="Status" name="status" values={STATUSES} value={v("status") || "Scheduled"} />
     </div>
     {message && <p className={`mt-4 rounded-lg border p-3 text-sm ${message.includes("successfully") ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300" : "border-red-500/30 bg-red-500/10 text-red-300"}`}>{message}</p>}
+    {conflictDate && <button type="button" onClick={() => router.push(`/availability?date=${encodeURIComponent(conflictDate)}`)} className="mt-3 rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-2.5 text-sm font-semibold text-amber-200 hover:bg-amber-500/20">Check Slots</button>}
     {whatsappText && <section className="mt-4 rounded-2xl border border-white/10 bg-[#0c101c] p-5"><p className="mb-3 text-sm font-semibold text-violet-300">WHATSAPP MESSAGE PREVIEW</p><pre className="whitespace-pre-wrap font-sans text-sm leading-7 text-slate-200">{whatsappText}</pre></section>}
     <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row"><button type="button" onClick={() => router.back()} className="rounded-xl border border-white/12 px-5 py-2.5 font-semibold text-slate-300 hover:bg-white/5">Cancel</button>{whatsappUrl && <button type="button" onClick={() => { void sendToWhatsApp(); }} className="rounded-xl bg-[#25D366] px-5 py-2.5 text-center font-semibold text-slate-950 hover:bg-[#4be083]">Send to WhatsApp Group</button>}<button disabled={saving || !!whatsappUrl} className="rounded-xl bg-gradient-to-r from-violet-600 to-indigo-500 px-5 py-2.5 font-semibold text-white disabled:opacity-60">{saving ? "Saving…" : publicSchedule ? "Schedule Interview" : interview ? "Update Interview" : "Save Interview"}</button></div>
     {copyNotice && <div role="status" className="fixed bottom-5 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-2xl border border-emerald-400/30 bg-[#10251d] p-4 text-center text-sm font-semibold text-emerald-200 shadow-2xl shadow-black/40">{copyNotice}</div>}

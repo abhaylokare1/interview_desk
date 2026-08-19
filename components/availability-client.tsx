@@ -6,8 +6,8 @@ type Slot = { fromTime: string; toTime: string };
 const today = new Date().toISOString().slice(0, 10);
 const time = (value: string) => { const [hours, minutes] = value.split(":").map(Number); return `${((hours + 11) % 12) + 1}:${String(minutes).padStart(2, "0")} ${hours >= 12 ? "PM" : "AM"}`; };
 
-export default function AvailabilityClient() {
-  const [date, setDate] = useState(today);
+export default function AvailabilityClient({ initialDate = today }: { initialDate?: string }) {
+  const [date, setDate] = useState(/^\d{4}-\d{2}-\d{2}$/.test(initialDate) ? initialDate : today);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [loading, setLoading] = useState(true);
 
