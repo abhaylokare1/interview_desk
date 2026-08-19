@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { checkConflict, persistInterview, scheduleInterview } from "@/app/actions";
 import { EXPERIENCE_TYPES, INTERVIEW_TYPES, STATUSES, type Interview } from "@/lib/types";
 import { useRouter } from "next/navigation";
@@ -35,9 +35,21 @@ export default function InterviewForm({ interview, profile, publicSchedule = fal
   const [whatsappUrl, setWhatsappUrl] = useState("");
   const [whatsappText, setWhatsappText] = useState("");
   const [copyNotice, setCopyNotice] = useState("");
+  const [emptyFields, setEmptyFields] = useState<string[]>([]);
+  const formRef = useRef<HTMLFormElement>(null);
   const v = (key: Exclude<keyof Interview, "id">): string => String(interview?.[key] ?? "");
+  const inputClass = (name: string) => `mt-1.5 ${emptyFields.includes(name) ? "border-red-500 ring-2 ring-red-500/25" : ""}`;
 
   async function submit(formData: FormData) {
+    const missing = Array.from(formRef.current?.querySelectorAll<HTMLInputElement>("input[required]") || []).filter(input => !input.value.trim()).map(input => input.name);
+    if (missing.length) {
+      setEmptyFields(missing);
+      setMessage("Complete the highlighted required fields.");
+      const first = formRef.current?.querySelector<HTMLInputElement>(`[name="${missing[0]}"]`);
+      first?.scrollIntoView({ behavior: "smooth", block: "center" });
+      first?.focus();
+      return;
+    }
     setSaving(true);
     setMessage("");
     setWhatsappUrl("");
@@ -90,21 +102,21 @@ export default function InterviewForm({ interview, profile, publicSchedule = fal
     if (!desktop) window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   }
 
-  return <form action={submit} className="rounded-2xl border border-white/10 bg-[#111522]/85 p-4 shadow-2xl shadow-black/20 sm:p-6">
+  return <form ref={formRef} noValidate action={submit} onInput={event => { const target = event.target as HTMLInputElement; if (target.name && target.value.trim()) setEmptyFields(previous => previous.filter(name => name !== target.name)); }} className="rounded-2xl border border-white/10 bg-[#111522]/85 p-4 shadow-2xl shadow-black/20 sm:p-6">
     <input type="hidden" name="id" value={interview?.id ?? ""} />
     <div className="mb-6 flex items-center gap-3 border-b border-white/8 pb-4"><span className="grid size-9 place-items-center rounded-xl bg-violet-500/15 text-violet-300">✦</span><div><h2 className="font-semibold text-white">Interview details</h2><p className="text-xs text-slate-500">Fields marked * are required</p></div></div>
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <label className={field}>Student Name *<input className="mt-1.5" name="studentName" defaultValue={interview ? v("studentName") : profile?.name || ""} required autoFocus /></label>
-      <label className={field}>Years of Experience<input className="mt-1.5" name="yearsOfExperience" type="number" min="0" step="0.5" defaultValue={v("yearsOfExperience")} /></label>
+      <label className={field}>Student Name *<input className={inputClass("studentName")} name="studentName" defaultValue={interview ? v("studentName") : profile?.name || ""} required autoFocus /></label>
+      <label className={field}>Years of Experience *<input className={inputClass("yearsOfExperience")} name="yearsOfExperience" type="number" min="0" step="0.5" defaultValue={v("yearsOfExperience")} required /></label>
       <Select label="Experience Type" name="experienceType" values={EXPERIENCE_TYPES} value={v("experienceType") || "Original"} />
-      <label className={field}>Interview Date *<input className="mt-1.5" name="interviewDate" type="date" defaultValue={v("interviewDate")} required /></label>
-      <label className={field}>From Time *<input className="mt-1.5" name="fromTime" type="time" defaultValue={v("fromTime")} required /></label>
-      <label className={field}>To Time *<input className="mt-1.5" name="toTime" type="time" defaultValue={v("toTime")} required /></label>
-      <label className={field}>Technology<input className="mt-1.5" name="technology" defaultValue={v("technology")} placeholder="Java + React" /></label>
-      <label className={field}>Company Name<input className="mt-1.5" name="companyName" defaultValue={v("companyName")} /></label>
+      <label className={field}>Interview Date *<input className={inputClass("interviewDate")} name="interviewDate" type="date" defaultValue={v("interviewDate")} required /></label>
+      <label className={field}>From Time *<input className={inputClass("fromTime")} name="fromTime" type="time" defaultValue={v("fromTime")} required /></label>
+      <label className={field}>To Time *<input className={inputClass("toTime")} name="toTime" type="time" defaultValue={v("toTime")} required /></label>
+      <label className={field}>Technology *<input className={inputClass("technology")} name="technology" defaultValue={v("technology")} placeholder="Java + React" required /></label>
+      <label className={field}>Company Name *<input className={inputClass("companyName")} name="companyName" defaultValue={v("companyName")} required /></label>
       <Select label="Interview Type" name="interviewType" values={INTERVIEW_TYPES} value={v("interviewType") || "ChatGPT"} />
-      <label className={field}>Contact Number<input className="mt-1.5" name="contactNumber" defaultValue={interview ? v("contactNumber") : profile?.contactNumber || ""} /></label>
-      <label className={field}>Interview Round<input className="mt-1.5" name="interviewRound" defaultValue={v("interviewRound")} placeholder="L1" /></label>
+      <label className={field}>Contact Number *<input className={inputClass("contactNumber")} name="contactNumber" defaultValue={interview ? v("contactNumber") : profile?.contactNumber || ""} required /></label>
+      <label className={field}>Interview Round *<input className={inputClass("interviewRound")} name="interviewRound" defaultValue={v("interviewRound")} placeholder="L1" required /></label>
       <Select label="Status" name="status" values={STATUSES} value={v("status") || "Scheduled"} />
     </div>
     {message && <p className={`mt-4 rounded-lg border p-3 text-sm ${message.includes("successfully") ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300" : "border-red-500/30 bg-red-500/10 text-red-300"}`}>{message}</p>}
