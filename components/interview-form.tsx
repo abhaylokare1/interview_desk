@@ -34,6 +34,7 @@ export default function InterviewForm({ interview, profile, publicSchedule = fal
   const [saving, setSaving] = useState(false);
   const [whatsappUrl, setWhatsappUrl] = useState("");
   const [whatsappText, setWhatsappText] = useState("");
+  const [copyNotice, setCopyNotice] = useState("");
   const v = (key: Exclude<keyof Interview, "id">): string => String(interview?.[key] ?? "");
 
   async function submit(formData: FormData) {
@@ -67,10 +68,26 @@ export default function InterviewForm({ interview, profile, publicSchedule = fal
   async function copyWhatsAppMessage() {
     try {
       await navigator.clipboard.writeText(whatsappText);
-      setMessage("Interview scheduled successfully. Message copied—choose a WhatsApp group and paste it.");
+      return true;
     } catch {
-      setMessage("Interview scheduled successfully. WhatsApp will open with the message pre-filled.");
+      const textarea = document.createElement("textarea");
+      textarea.value = whatsappText;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      const copied = document.execCommand("copy");
+      textarea.remove();
+      return copied;
     }
+  }
+
+  async function sendToWhatsApp() {
+    const copied = await copyWhatsAppMessage();
+    const desktop = window.matchMedia("(min-width: 768px) and (pointer: fine)").matches;
+    setCopyNotice(copied ? "Details copied. Paste them into your WhatsApp group." : "WhatsApp will open with the interview details pre-filled.");
+    window.setTimeout(() => setCopyNotice(""), 12000);
+    if (!desktop) window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   }
 
   return <form action={submit} className="rounded-2xl border border-white/10 bg-[#111522]/85 p-4 shadow-2xl shadow-black/20 sm:p-6">
@@ -91,6 +108,7 @@ export default function InterviewForm({ interview, profile, publicSchedule = fal
       <Select label="Status" name="status" values={STATUSES} value={v("status") || "Scheduled"} />
     </div>
     {message && <p className={`mt-4 rounded-lg border p-3 text-sm ${message.includes("successfully") ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300" : "border-red-500/30 bg-red-500/10 text-red-300"}`}>{message}</p>}
-    <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row"><button type="button" onClick={() => router.back()} className="rounded-xl border border-white/12 px-5 py-2.5 font-semibold text-slate-300 hover:bg-white/5">Cancel</button>{whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" onClick={() => { void copyWhatsAppMessage(); }} className="rounded-xl bg-[#25D366] px-5 py-2.5 text-center font-semibold text-slate-950 hover:bg-[#4be083]">Send to WhatsApp Group</a>}<button disabled={saving || !!whatsappUrl} className="rounded-xl bg-gradient-to-r from-violet-600 to-indigo-500 px-5 py-2.5 font-semibold text-white disabled:opacity-60">{saving ? "Saving…" : publicSchedule ? "Schedule Interview" : interview ? "Update Interview" : "Save Interview"}</button></div>
+    <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row"><button type="button" onClick={() => router.back()} className="rounded-xl border border-white/12 px-5 py-2.5 font-semibold text-slate-300 hover:bg-white/5">Cancel</button>{whatsappUrl && <button type="button" onClick={() => { void sendToWhatsApp(); }} className="rounded-xl bg-[#25D366] px-5 py-2.5 text-center font-semibold text-slate-950 hover:bg-[#4be083]">Send to WhatsApp Group</button>}<button disabled={saving || !!whatsappUrl} className="rounded-xl bg-gradient-to-r from-violet-600 to-indigo-500 px-5 py-2.5 font-semibold text-white disabled:opacity-60">{saving ? "Saving…" : publicSchedule ? "Schedule Interview" : interview ? "Update Interview" : "Save Interview"}</button></div>
+    {copyNotice && <div role="status" className="fixed bottom-5 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-2xl border border-emerald-400/30 bg-[#10251d] p-4 text-center text-sm font-semibold text-emerald-200 shadow-2xl shadow-black/40">{copyNotice}</div>}
   </form>;
 }
