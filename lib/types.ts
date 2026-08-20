@@ -1,4 +1,4 @@
-export const STATUSES = ["Scheduled", "Completed", "Cancelled", "Selected", "Rejected"] as const;
+export const STATUSES = ["Scheduled", "Completed", "Rescheduled", "Cancelled", "Selected", "Rejected"] as const;
 export const EXPERIENCE_TYPES = ["Original", "Newgen's", "Original + Newgen's"] as const;
 export const INTERVIEW_TYPES = ["ChatGPT", "Proxy"] as const;
 export type Role = "admin" | "student";
