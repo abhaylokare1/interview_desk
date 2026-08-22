@@ -3,9 +3,10 @@
 
 @theme { --color-brand: #8b5cf6; --color-ink: #f8fafc; }
 * { box-sizing: border-box; }
-html { background: #080a12; }
-body { margin: 0; min-height: 100vh; background: #080a12; color: #e7eaf3; font-family: "Nunito", ui-rounded, "SF Pro Rounded", "Arial Rounded MT Bold", -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Segoe UI", sans-serif; font-feature-settings: "kern" 1, "liga" 1, "tnum" 1; letter-spacing: -0.012em; text-rendering: optimizeLegibility; }
-body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(circle at 10% -10%, rgba(112, 66, 255, .24), transparent 34rem), radial-gradient(circle at 98% 8%, rgba(14, 165, 233, .13), transparent 29rem), linear-gradient(145deg, #080a12 0%, #0b0d18 48%, #080a12 100%); }
+html { background: #070814; }
+body { margin: 0; min-height: 100vh; background: #070814; color: #e7eaf3; font-family: "Nunito", ui-rounded, "SF Pro Rounded", "Arial Rounded MT Bold", -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Segoe UI", sans-serif; font-feature-settings: "kern" 1, "liga" 1, "tnum" 1; letter-spacing: -0.012em; text-rendering: optimizeLegibility; }
+body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(72% 58% at -8% -12%, rgba(109, 65, 235, .38), transparent 65%), radial-gradient(62% 52% at 108% 3%, rgba(24, 140, 255, .22), transparent 68%), radial-gradient(48% 42% at 48% 108%, rgba(93, 55, 180, .14), transparent 72%), linear-gradient(135deg, #070814 0%, #0a0d20 43%, #090b18 72%, #070814 100%); }
+body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .35; background-image: linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px); background-size: 34px 34px; mask-image: linear-gradient(to bottom, black, transparent 78%); }
 input, select, button { font: inherit; }
 input, select { width: 100%; border: 1px solid rgba(148,163,184,.25); border-radius: .8rem; padding: .76rem .9rem; color: #f8fafc; background: rgba(16,20,35,.92); outline: none; transition: border-color .18s, box-shadow .18s, background-color .18s; }
 input::placeholder { color: #7d859b; }
