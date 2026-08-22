@@ -21,7 +21,11 @@ export function InterviewTable({ interviews, onDeleted }: { interviews: Intervie
 
   if (!interviews.length) return <div className="surface rounded-2xl p-8 text-center text-sm text-slate-500">No interviews found.</div>;
 
-  return <div className="grid gap-4">
+  return <>
+    <div className="overflow-x-auto rounded-2xl border border-white/10 bg-[#111522]/85 shadow-2xl shadow-black/20 md:hidden">
+      <table className="min-w-[1100px] w-full text-left text-sm"><thead className="bg-white/4 text-slate-400"><tr>{["Name", "Experience", "Experience Type", "Date", "Time", "Technology", "Company", "Interview Type", "Contact No.", "Interview Round", "Status", "Actions"].map(column => <th className="whitespace-nowrap px-4 py-3.5 font-semibold" key={column}>{column}</th>)}</tr></thead><tbody>{interviews.map(interview => <tr className="border-t border-white/6 text-slate-300" key={interview.id}><td className="px-4 py-3.5 font-semibold text-white">{interview.studentName}</td><td className="px-4 py-3.5">{interview.yearsOfExperience || "—"}</td><td className="px-4 py-3.5">{interview.experienceType}</td><td className="whitespace-nowrap px-4 py-3.5">{interview.interviewDate}</td><td className="whitespace-nowrap px-4 py-3.5">{showTime(interview)}</td><td className="px-4 py-3.5">{interview.technology || "—"}</td><td className="px-4 py-3.5">{interview.companyName || "—"}</td><td className="px-4 py-3.5">{interview.interviewType}</td><td className="px-4 py-3.5">{interview.contactNumber || "—"}</td><td className="px-4 py-3.5">{interview.interviewRound || "—"}</td><td className="px-4 py-3.5"><span className="rounded-full border border-violet-400/20 bg-violet-500/10 px-2 py-1 text-xs text-violet-200">{interview.status}</span></td><td className="whitespace-nowrap px-4 py-3.5">{interview.contactNumber ? <a href={`tel:${interview.contactNumber.replace(/[^\d+]/g, "")}`} className="mr-3 font-semibold text-emerald-300">Call</a> : null}<Link className="mr-3 font-semibold text-violet-300" href={`/interviews/${interview.id}/edit`}>Edit</Link><button onClick={() => remove(interview.id)} className="font-semibold text-red-400">Delete</button></td></tr>)}</tbody></table>
+    </div>
+    <div className="hidden gap-4 md:grid">
     {interviews.map(interview => <article key={interview.id} className="surface overflow-hidden rounded-2xl">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[.07] px-4 py-4 sm:px-5">
         <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[.12em] text-violet-300">Interview record</p><h2 className="mt-1 truncate text-lg font-bold tracking-tight text-white">{interview.studentName}</h2></div>
@@ -39,5 +43,6 @@ export function InterviewTable({ interviews, onDeleted }: { interviews: Intervie
         <Detail label="Interview Round" value={interview.interviewRound} />
       </div>
     </article>)}
-  </div>;
+    </div>
+  </>;
 }
